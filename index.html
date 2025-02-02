@@ -5,29 +5,44 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
     <title>Godot Products</title>
     <style>
-      /* リセット */
+      /* 基本リセット */
       html, body {
         margin: 0;
         padding: 0;
         border: 0;
       }
-
-      /* Body: ゲーム画面の下に説明を表示するため、overflow は auto に設定 */
+      
+      /* Body: 画面全体に説明文とキャンバスを配置 */
       body {
         color: white;
         background-color: black;
-        overflow: auto;
+        overflow: auto; /* 必要ならスクロール可能に */
         touch-action: none;
+        position: relative;
       }
-
-      /* ゲーム画面を囲むコンテナ（固定サイズ） */
+      
+      /* 説明文を画面左上に固定表示 */
+      #instructions {
+        position: absolute;
+        top: 0;
+        left: 0;
+        background-color: rgba(0, 0, 0, 0.8);
+        padding: 10px;
+        border-bottom-right-radius: 5px;
+        font-family: sans-serif;
+        font-size: 16px;
+        color: white;
+        z-index: 1000;
+      }
+      
+      /* ゲーム画面（キャンバス）のコンテナ：左端に配置（固定サイズ 1280×720） */
       #game-container {
         width: 1150px;
         height: 648px;
-        margin: 0 auto;  /* 横中央に配置 */
+        margin: 0; /* 左端に寄せる */
         position: relative;
       }
-
+      
       /* Godot が生成するキャンバス */
       #canvas {
         display: block;
@@ -37,8 +52,8 @@
       #canvas:focus {
         outline: none;
       }
-
-      /* 既存のステータス表示用要素（変更なし） */
+      
+      /* 以下はエクスポートHTMLに元々含まれるステータス表示用CSS */
       #status, #status-splash, #status-progress {
         position: absolute;
         left: 0;
@@ -82,52 +97,38 @@
         text-align: center;
         z-index: 1;
       }
-
-      /* 説明用エリアのスタイル（ゲーム画面の下に配置） */
-      #instructions {
-        width: 1280px;
-        margin: 20px auto;
-        background-color: rgba(0, 0, 0, 0.8);
-        padding: 10px;
-        border-radius: 5px;
-        font-family: sans-serif;
-        font-size: 16px;
-        text-align: left;
-        color: white;
-      }
     </style>
     <link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
     <link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
   </head>
   <body>
-    <!-- ゲーム画面を囲むコンテナ -->
-    <div id="game-container">
-      <canvas id="canvas">
-        Your browser does not support the canvas tag.
-      </canvas>
-    </div>
-
-    <!-- ゲーム画面の下に操作方法の説明 -->
+    <!-- 説明文（操作方法など）を左上に固定 -->
     <div id="instructions">
       <p><strong>操作方法</strong></p>
       <ul>
         <li>PCの場合: ←キー / →キーで移動</li>
         <li>タッチの場合: タップした位置に向かって移動</li>
-        <!-- ここに追加の説明を記述 -->
       </ul>
     </div>
-
+    
+    <!-- ゲーム画面（キャンバス）のコンテナを左端に配置 -->
+    <div id="game-container">
+      <canvas id="canvas">
+        Your browser does not support the canvas tag.
+      </canvas>
+    </div>
+    
     <noscript>
       Your browser does not support JavaScript.
     </noscript>
-
-    <!-- ステータス表示用の要素（Godot エンジンが利用） -->
+    
+    <!-- ステータス表示用要素（エンジンが利用） -->
     <div id="status">
       <img id="status-splash" src="index.png" alt="">
       <progress id="status-progress"></progress>
       <div id="status-notice"></div>
     </div>
-
+    
     <!-- Godot エンジンの JavaScript ファイル -->
     <script src="index.js"></script>
     <script>
@@ -143,15 +144,15 @@
       };
       const GODOT_THREADS_ENABLED = false;
       const engine = new Engine(GODOT_CONFIG);
-
+    
       (function () {
         const statusOverlay = document.getElementById('status');
         const statusProgress = document.getElementById('status-progress');
         const statusNotice = document.getElementById('status-notice');
-
+    
         let initializing = true;
         let statusMode = '';
-
+    
         function setStatusMode(mode) {
           if (statusMode === mode || !initializing) {
             return;
@@ -166,7 +167,7 @@
           statusNotice.style.display = mode === 'notice' ? 'block' : 'none';
           statusMode = mode;
         }
-
+    
         function setStatusNotice(text) {
           while (statusNotice.lastChild) {
             statusNotice.removeChild(statusNotice.lastChild);
@@ -177,7 +178,7 @@
             statusNotice.appendChild(document.createElement('br'));
           });
         }
-
+    
         function displayFailureNotice(err) {
           console.error(err);
           if (err instanceof Error) {
@@ -190,11 +191,11 @@
           setStatusMode('notice');
           initializing = false;
         }
-
+    
         const missing = Engine.getMissingFeatures({
           threads: GODOT_THREADS_ENABLED,
         });
-
+    
         if (missing.length !== 0) {
           if (GODOT_CONFIG['serviceWorker'] && GODOT_CONFIG['ensureCrossOriginIsolationHeaders'] && 'serviceWorker' in navigator) {
             Promise.race([
