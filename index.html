@@ -2,7 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+    <!-- user-scalable=no を削除して、ユーザーによるズーム操作を許可 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Godot Products</title>
     <style>
       /* リセット */
@@ -12,43 +13,36 @@
         border: 0;
       }
       
-      /* Body の設定 */
+      /* Body設定 */
       body {
-        color: white;
         background-color: black;
-        overflow: auto;
-        touch-action: none;
+        color: white;
+        overflow-x: hidden; /* 横スクロールを防止 */
         font-family: sans-serif;
       }
       
-      /* 説明文（操作方法）のスタイル：通常の文書フローなので位置は文書の先頭（左上） */
+      /* 説明文：通常の文書フローでページ上部に表示 */
       #instructions {
         background-color: rgba(0, 0, 0, 0.8);
         padding: 10px;
-        border-bottom-right-radius: 5px;
         font-size: 16px;
         color: white;
       }
       
-      /* ゲーム画面のコンテナ：固定サイズ、左端に配置 */
+      /* ゲーム画面のコンテナ：PC用は固定サイズ、モバイルではレスポンシブに */
       #game-container {
         width: 1280px;
         height: 720px;
-        margin: 0; /* 左寄せ */
-        position: relative;
       }
       
-      /* Godot が生成するキャンバス */
+      /* キャンバスのスタイル */
       #canvas {
         display: block;
         width: 100%;
         height: 100%;
       }
-      #canvas:focus {
-        outline: none;
-      }
       
-      /* 以下はエクスポートHTMLに元々含まれるステータス表示用CSS */
+      /* エクスポートHTMLに元々含まれるステータス関連（変更なし） */
       #status, #status-splash, #status-progress {
         position: absolute;
         left: 0;
@@ -91,24 +85,30 @@
         text-align: center;
         z-index: 1;
       }
+      
+      /* レスポンシブ対応：画面幅が 1280px 未満の場合 */
+      @media screen and (max-width: 1280px) {
+        /* ゲーム画面コンテナは幅100%、高さは自動（Godot側のビューポート調整に任せる） */
+        #game-container {
+          width: 100%;
+          height: auto;
+        }
+      }
     </style>
     <link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
     <link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
   </head>
   <body>
-    <!-- 説明文（操作方法）：通常の文書フローなのでページの上部（左上）に配置されます -->
+    <!-- 説明文（操作方法）：ページ上部に通常の文書フローで配置（左上に表示） -->
     <div id="instructions">
-      <p><strong>あそびかた</strong></p>
+      <p><strong>操作方法</strong></p>
       <ul>
-        <li>←/→キーかクリック/タップで移動します</li>
-        <li>雛菜色の飴を食べると小糸ちゃんがにっこりします</li>
-		<li>ハズレの飴を食べると小糸ちゃんがびっくりします</li>
-		<li>動き続けると小糸ちゃんがたいへんです</li>
-		<li>それだけです！！！</li>
+        <li>PCの場合: ←キー / →キーで移動</li>
+        <li>タッチの場合: タップした位置に向かって移動</li>
       </ul>
     </div>
     
-    <!-- ゲーム画面（キャンバス）のコンテナ：左寄せ -->
+    <!-- ゲーム画面（キャンバス）のコンテナ：PCでは固定サイズ、スマホでは画面幅に合わせる -->
     <div id="game-container">
       <canvas id="canvas">
         Your browser does not support the canvas tag.
@@ -119,7 +119,7 @@
       Your browser does not support JavaScript.
     </noscript>
     
-    <!-- ステータス表示用要素（Godot エンジンが利用） -->
+    <!-- ステータス表示用要素（Godot エンジン用） -->
     <div id="status">
       <img id="status-splash" src="index.png" alt="">
       <progress id="status-progress"></progress>
