@@ -1,9 +1,8 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
   <head>
     <meta charset="utf-8">
-    <!-- viewport を設定し、レスポンシブ対応 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
     <title>Godot Products</title>
     <style>
       /* リセット */
@@ -12,41 +11,44 @@
         padding: 0;
         border: 0;
       }
-      /* Body の基本設定 */
+      
+      /* Body の設定 */
       body {
-        background-color: black;
         color: white;
+        background-color: black;
+        overflow: auto;
+        touch-action: none;
         font-family: sans-serif;
-        overflow-x: hidden;
       }
-      /* 操作方法の説明：文書の先頭に配置（通常のフロー） */
+      
+      /* 説明文（操作方法）のスタイル：通常の文書フローなので位置は文書の先頭（左上） */
       #instructions {
-        width: 100%;
         background-color: rgba(0, 0, 0, 0.8);
         padding: 10px;
-        box-sizing: border-box;
+        border-bottom-right-radius: 5px;
         font-size: 16px;
+        color: white;
       }
-      /* ゲーム画面のコンテナ：PC では固定サイズ、スマホでは横幅 100% に */
+      
+      /* ゲーム画面のコンテナ：固定サイズ、左端に配置 */
       #game-container {
         width: 1280px;
         height: 720px;
-        background-color: #000;
+        margin: 0; /* 左寄せ */
+        position: relative;
       }
+      
       /* Godot が生成するキャンバス */
       #canvas {
         display: block;
         width: 100%;
         height: 100%;
       }
-      /* レスポンシブ対応：画面幅が 1280px 未満の場合 */
-      @media screen and (max-width: 1280px) {
-        #game-container {
-          width: 100%;
-          height: auto;
-        }
+      #canvas:focus {
+        outline: none;
       }
-      /* 以下、Godot エクスポートHTMLに元々含まれるステータス用CSS */
+      
+      /* 以下はエクスポートHTMLに元々含まれるステータス表示用CSS */
       #status, #status-splash, #status-progress {
         position: absolute;
         left: 0;
@@ -94,19 +96,19 @@
     <link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
   </head>
   <body>
-    <!-- 操作方法の説明（画面上部・左上） -->
+    <!-- 説明文（操作方法）：通常の文書フローなのでページの上部（左上）に配置されます -->
     <div id="instructions">
       <p><strong>あそびかた</strong></p>
       <ul>
         <li>←/→キーかクリック/タップで移動します</li>
-		<li>雛菜色の飴を食べると小糸ちゃんがにっこりします</li>
+        <li>雛菜色の飴を食べると小糸ちゃんがにっこりします</li>
 		<li>ハズレの飴を食べると小糸ちゃんがびっくりします</li>
 		<li>動き続けると小糸ちゃんがたいへんです</li>
 		<li>それだけです！！！</li>
       </ul>
     </div>
     
-    <!-- ゲーム画面のコンテナ（左寄せ、操作方法の下） -->
+    <!-- ゲーム画面（キャンバス）のコンテナ：左寄せ -->
     <div id="game-container">
       <canvas id="canvas">
         Your browser does not support the canvas tag.
@@ -117,7 +119,7 @@
       Your browser does not support JavaScript.
     </noscript>
     
-    <!-- Godot エンジン用のステータス表示要素 -->
+    <!-- ステータス表示用要素（Godot エンジンが利用） -->
     <div id="status">
       <img id="status-splash" src="index.png" alt="">
       <progress id="status-progress"></progress>
@@ -149,7 +151,9 @@
         let statusMode = '';
     
         function setStatusMode(mode) {
-          if (statusMode === mode || !initializing) return;
+          if (statusMode === mode || !initializing) {
+            return;
+          }
           if (mode === 'hidden') {
             statusOverlay.remove();
             initializing = false;
@@ -174,24 +178,38 @@
     
         function displayFailureNotice(err) {
           console.error(err);
-          if (err instanceof Error) setStatusNotice(err.message);
-          else if (typeof err === 'string') setStatusNotice(err);
-          else setStatusNotice('An unknown error occured');
+          if (err instanceof Error) {
+            setStatusNotice(err.message);
+          } else if (typeof err === 'string') {
+            setStatusNotice(err);
+          } else {
+            setStatusNotice('An unknown error occured');
+          }
           setStatusMode('notice');
           initializing = false;
         }
     
-        const missing = Engine.getMissingFeatures({threads: GODOT_THREADS_ENABLED});
+        const missing = Engine.getMissingFeatures({
+          threads: GODOT_THREADS_ENABLED,
+        });
+    
         if (missing.length !== 0) {
           if (GODOT_CONFIG['serviceWorker'] && GODOT_CONFIG['ensureCrossOriginIsolationHeaders'] && 'serviceWorker' in navigator) {
             Promise.race([
               navigator.serviceWorker.getRegistration().then((registration) => {
-                if (registration != null) return Promise.reject(new Error('Service worker already exists.'));
+                if (registration != null) {
+                  return Promise.reject(new Error('Service worker already exists.'));
+                }
                 return registration;
               }).then(() => engine.installServiceWorker()),
-              new Promise((resolve) => { setTimeout(() => resolve(), 2000); })
-            ]).catch((err) => { console.error('Error while registering service worker:', err); })
-              .then(() => { window.location.reload(); });
+              new Promise((resolve) => {
+                setTimeout(() => resolve(), 2000);
+              }),
+            ]).catch((err) => {
+              console.error('Error while registering service worker:', err);
+            }).then(() => {
+              window.location.reload();
+            });
           } else {
             const missingMsg = 'Error\nThe following features required to run Godot projects on the Web are missing:\n';
             displayFailureNotice(missingMsg + missing.join('\n'));
@@ -207,7 +225,7 @@
                 statusProgress.removeAttribute('value');
                 statusProgress.removeAttribute('max');
               }
-            }
+            },
           }).then(() => {
             setStatusMode('hidden');
           }, displayFailureNotice);
